@@ -1,0 +1,14 @@
+# Local audit reports and captured browser output
+/.ui-check/
+/.fidelitycheck/
+
+# Local build artifacts
+/ui-check
+/ui-check.exe
+/fidelitycheck
+
+# Product planning documents kept locally
+/fidelitycheck-docs/
+
+# macOS metadata
+.DS_Store

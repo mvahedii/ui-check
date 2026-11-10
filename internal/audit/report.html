@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self' file:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+<title>UI Check · {{.Status}}</title>
+<style>
+  body { font: 16px system-ui, sans-serif; margin: 2rem auto; padding: 0 1rem; max-width: 64rem; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { text-align: left; padding: .65rem; border-bottom: 1px solid #8886; }
+  .images { display: flex; flex-wrap: wrap; gap: 1rem; }
+  figure { margin: 0; max-width: 100%; }
+  img { max-width: 100%; height: auto; border: 1px solid #8886; }
+  code { overflow-wrap: anywhere; }
+</style>
+<h1>UI Check · {{.Status}}</h1>
+<p>Run <code>{{.RunID}}</code> · Verified coverage {{printf "%.0f" .Coverage}} of 1 supported pair</p>
+<p>Design <code>{{.DesignVersion}} / {{.FrameID}}</code> ({{.DesignSource}}). Target <code>{{.Target}}</code>.</p>
+<p>{{.Browser}} · {{.OS}} · {{.Width}} × {{.Height}} CSS px · DPR {{.DPR}}</p>
+<p>Policy: tolerance {{.Policy.Tolerance}} CSS px, fail on {{.Policy.FailOn}} or higher.</p>
+
+<h2>Measured top inset</h2>
+{{with .Measurement}}
+<table>
+  <thead><tr><th>Expected</th><th>Actual</th><th>Delta</th><th>Verification</th></tr></thead>
+  <tbody><tr><td>{{.Expected}} {{.Unit}}</td><td>{{.Actual}} {{.Unit}}</td><td>{{printf "%+g" .Delta}} {{.Unit}}</td><td>{{.Verification}}</td></tr></tbody>
+</table>
+<ul>{{range .Evidence}}<li><a href="{{.Artifact}}">{{.Kind}} <code>{{.ID}}</code></a> {{.Selector}}</li>{{end}}</ul>
+{{else}}
+<p>The top inset could not be verified.</p>
+{{end}}
+
+<h2>Findings</h2>
+{{range .Findings}}
+<p><strong>{{.Severity}}</strong> · {{.Property}} · {{printf "%+g" .Delta}} {{.Unit}}</p>
+{{else}}<p>No verified finding exceeded tolerance.</p>{{end}}
+
+{{if .Unverified}}
+<h2>Unverified</h2>
+<ul>{{range .Unverified}}<li>{{.}}</li>{{end}}</ul>
+{{end}}
+
+<h2>Capture evidence</h2>
+<div class="images">
+  <figure><img src="{{.Reference}}" alt="Synthetic design reference" width="{{.Width}}" height="{{.Height}}"><figcaption>Synthetic design reference</figcaption></figure>
+  <figure><img src="assets/target.png" alt="Chromium viewport capture" width="{{.Width}}" height="{{.Height}}"><figcaption>Chromium viewport capture</figcaption></figure>
+</div>
+<p><a href="report.json">Machine-readable report</a></p>
+</html>

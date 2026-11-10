@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "UI Check M1 completed audit report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "runId", "timestamp", "status", "designSource", "designVersion",
+    "frameId", "target", "section", "browserVersion", "os", "viewportWidth",
+    "viewportHeight", "dpr", "policy", "coverage", "matchMethod", "findings", "unverified"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "runId": { "type": "string", "pattern": "^run-[0-9]+$" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "status": { "enum": ["PASS", "FAIL", "INCONCLUSIVE"] },
+    "designSource": { "const": "synthetic" },
+    "designVersion": { "$ref": "#/$defs/nonEmpty" },
+    "frameId": { "$ref": "#/$defs/nonEmpty" },
+    "target": { "type": "string", "format": "uri" },
+    "section": { "$ref": "#/$defs/nonEmpty" },
+    "browserVersion": { "$ref": "#/$defs/nonEmpty" },
+    "os": { "$ref": "#/$defs/nonEmpty" },
+    "viewportWidth": { "type": "integer", "minimum": 1, "maximum": 4096 },
+    "viewportHeight": { "type": "integer", "minimum": 1, "maximum": 4096 },
+    "dpr": { "const": 1 },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["geometryToleranceCssPx", "failOn"],
+      "properties": {
+        "geometryToleranceCssPx": { "type": "number", "minimum": 0 },
+        "failOn": { "enum": ["minor", "major", "critical"] }
+      }
+    },
+    "coverage": { "enum": [0, 1] },
+    "matchMethod": { "const": "unique-test-id-and-direct-parent" },
+    "matchConfidence": { "const": 1 },
+    "measurement": { "$ref": "#/$defs/measurement", "unevaluatedProperties": false },
+    "findings": { "type": "array", "maxItems": 1, "items": { "$ref": "#/$defs/finding" } },
+    "unverified": { "type": "array", "maxItems": 1, "items": { "$ref": "#/$defs/nonEmpty" } }
+  },
+  "if": { "properties": { "status": { "const": "INCONCLUSIVE" } } },
+  "then": {
+    "properties": { "coverage": { "const": 0 }, "findings": { "maxItems": 0 }, "unverified": { "minItems": 1 } },
+    "not": { "anyOf": [{ "required": ["measurement"] }, { "required": ["matchConfidence"] }] }
+  },
+  "else": {
+    "required": ["measurement", "matchConfidence"],
+    "properties": { "coverage": { "const": 1 }, "unverified": { "maxItems": 0 } }
+  },
+  "$defs": {
+    "nonEmpty": { "type": "string", "minLength": 1 },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id", "artifactPath"],
+      "properties": {
+        "kind": { "enum": ["design-node", "dom-element"] },
+        "id": { "$ref": "#/$defs/nonEmpty" },
+        "artifactPath": { "enum": ["evidence/design.json", "evidence/dom.json"] },
+        "selector": { "$ref": "#/$defs/nonEmpty" }
+      }
+    },
+    "measurement": {
+      "type": "object",
+      "required": ["expected", "actual", "delta", "unit", "verification", "evidence"],
+      "properties": {
+        "expected": { "type": "number", "minimum": 0 },
+        "actual": { "type": "number", "minimum": 0 },
+        "delta": { "type": "number" },
+        "unit": { "const": "css-px" },
+        "verification": { "const": "verified" },
+        "evidence": {
+          "type": "array", "minItems": 4, "maxItems": 4,
+          "uniqueItems": true, "items": { "$ref": "#/$defs/evidence" }
+        }
+      }
+    },
+    "finding": {
+      "$ref": "#/$defs/measurement",
+      "unevaluatedProperties": false,
+      "required": ["id", "category", "property", "severity"],
+      "properties": {
+        "id": { "const": "top-inset" },
+        "category": { "const": "spacing" },
+        "property": { "const": "visual-top-inset" },
+        "severity": { "const": "minor" }
+      }
+    }
+  }
+}
